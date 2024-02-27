@@ -333,16 +333,20 @@ _API_FUNCTION_PROTOTYPES = [
 # Error Handling
 ###############################################################################
 class FLIError(Exception):
-    pass
+    def __init__(self, message, errors):
+        super().__init__(message)
+        self.errors = errors
 
 class FLIWarning(Warning):
-    pass
+    def __init__(self, message, warning):
+        super().__init__(message)
+        self.errors = warning
 
 def chk_err(err):
     """wraps a libfli C function call with error checking code"""
     if err < 0:
         msg = os.strerror(abs(err)) #err is always negative
-        raise FLIError(msg)
+        raise FLIError(msg, err)
     if err > 0:
         msg = os.strerror(err)      #FIXME, what if err is positive?
         raise FLIWarning(msg)
@@ -387,7 +391,7 @@ class FLILibrary:
                         msg = "trying to load library at path '%s'" % (libname,)
                         FLILibrary.__dll = cdll.LoadLibrary(libname)
                         break #load successful, stop trying
-                    except OSError, err:
+                    except OSError as err:
                         msg = "failed to load library with error: %s" % (err,)
                         warnings.warn(Warning(msg))
                 else:
@@ -399,13 +403,15 @@ class FLILibrary:
                     api_func.argtypes = argtypes
                     if wrap_error_codes:
                         api_func.restype = chk_err
-                except AttributeError, err:
+                except AttributeError as err:
                     warnings.warn(Warning(err))
 
         #set debug level
         if debug:
             #FIXME this filename is ignored on Linux where syslog(3) is used to send debug messages
-            host = c_char_p(DEBUG_HOST_FILENAME)
+            outfile = open(DEBUG_HOST_FILENAME, "w")
+            fileno = outfile.fileno()
+            host = c_char_p(fileno)
             FLILibrary.__dll.FLISetDebugLevel(host, FLIDEBUG_ALL)
         
             

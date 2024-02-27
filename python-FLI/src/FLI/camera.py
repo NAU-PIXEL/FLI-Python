@@ -66,7 +66,7 @@ class USBCamera(USBDevice):
         #("FLIGetCameraModeString", [flidev_t, flimode_t, c_char_p, c_size_t]),
         #(flidev_t dev, flimode_t mode_index, char *mode_string, size_t siz);
         buff_size = 32
-        mode_string = create_string_buffer("",buff_size)
+        mode_string = create_string_buffer(b"",buff_size)
         mode_index = self.get_camera_mode()
         self._libfli.FLIGetCameraModeString(self._dev, mode_index, mode_string, c_size_t(buff_size))
         return mode_string.value
@@ -86,8 +86,8 @@ class USBCamera(USBDevice):
         "returns (row_width, img_rows, img_size)"
         left, top, right, bottom   = (c_long(),c_long(),c_long(),c_long())        
         self._libfli.FLIGetVisibleArea(self._dev, byref(left), byref(top), byref(right), byref(bottom))    
-        row_width = (right.value - left.value)/self.hbin
-        img_rows  = (bottom.value - top.value)/self.vbin
+        row_width = (right.value - left.value)//self.hbin
+        img_rows  = (bottom.value - top.value)//self.vbin
         img_size = img_rows * row_width * sizeof(c_uint16)
         return (row_width, img_rows, img_size)
 
@@ -101,8 +101,8 @@ class USBCamera(USBDevice):
     def set_image_binning(self, hbin = 1, vbin = 1):
         left, top, right, bottom   = (c_long(),c_long(),c_long(),c_long())        
         self._libfli.FLIGetVisibleArea(self._dev, byref(left), byref(top), byref(right), byref(bottom))    
-        row_width = (right.value - left.value)/hbin
-        img_rows  = (bottom.value - top.value)/vbin
+        row_width = (right.value - left.value)//hbin
+        img_rows  = (bottom.value - top.value)//vbin
         self._libfli.FLISetImageArea(self._dev, left, top, left.value + row_width, top.value + img_rows)
         self._libfli.FLISetHBin(self._dev, hbin)
         self._libfli.FLISetVBin(self._dev, vbin)
@@ -243,12 +243,12 @@ class USBCamera(USBDevice):
 if __name__ == "__main__":
     cams = USBCamera.find_devices()
     cam0 = cams[0]
-    print "info:", cam0.get_info()
-    print "image size:", cam0.get_image_size()
-    print "temperature:", cam0.get_temperature()
-    print "mode:", cam0.get_camera_mode_string()
+    print("info:", cam0.get_info())
+    print("image size:", cam0.get_image_size())
+    print("temperature:", cam0.get_temperature())
+    print("mode:", cam0.get_camera_mode_string())
     cam0.set_image_binning(2,2)
-    cam0.set_bitdepth("16bit") #this should generate a warning for any USB camera in libfli-1.104
+    # cam0.set_bitdepth("16bit") #this should generate a warning for any USB camera in libfli-1.104
     cam0.set_exposure(5)
     img = cam0.take_photo()
-    print img
+    print(img)

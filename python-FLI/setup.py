@@ -19,7 +19,7 @@ PACKAGE_PATH  = os.path.abspath(os.sep.join((PACKAGE_SOURCE_DIR,PACKAGE_NAME)))
 
 PACKAGE_METADATA = {
     'name'         : PACKAGE_NAME,
-    'version'      : 'dev',
+    'version'      : '1.0',
     'author'       : "Craig Versek",
     'author_email' : "cwv@yesinc.com",
 }
